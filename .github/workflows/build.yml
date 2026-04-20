@@ -1,0 +1,29 @@
+name: Build Kernel
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - run: |
+        sudo apt update
+        sudo apt install -y bc bison build-essential flex git curl libssl-dev libncurses5-dev libelf-dev python3
+
+    - run: |
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH=$PWD/clang/bin:$PATH
+        mkdir -p out
+        make O=out oppo6765_defconfig
+        make -j4 O=out CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: kernel
+        path: out/arch/arm64/boot/
